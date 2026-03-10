@@ -5,11 +5,23 @@ from app.schemas.session_sechema import Exercise, WorkoutSession, SessionRespons
 from app.services.analyzer import analyze_session
 from app.services.recommendation_engine import recommend_exercises
 from app.services.ai_coach import analyze_workout
+from app.routes import workout
 
 app = FastAPI()
 
 sessions_db = []
 session_counter = 1
+
+app = FastAPI(
+    title="PrimeCoach API",
+    version="1.0.0"
+)
+
+app.include_router(
+    workout.router,
+    prefix="/workout",
+    tags=["Workout"]
+)
 
 @app.get("/exercises", response_model= List[Exercise])
 def get_exercises(
