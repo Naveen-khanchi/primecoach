@@ -42,7 +42,7 @@ Static list of 6 hardcoded exercises (Chest, Back, Legs only).
 Needs to be expanded significantly to cover all muscle groups and exercise types
 before recommendations can be meaningful.
 
-### 1.4 Database ❌
+### 1.4 Database ✅
 Currently using in-memory lists. Data is lost on every server restart.
 Need to introduce a real database (SQLite for development, PostgreSQL for production)
 to persist users, sessions, and progress data.
@@ -53,7 +53,7 @@ to persist users, sessions, and progress data.
 
 ## Phase 2 — User Profile
 
-### 2.1 User Profile Schema ❌
+### 2.1 User Profile Schema ✅
 Before any analysis or recommendation can be personalized, the system needs to know
 who the user is. A profile must be collected on first use.
 
@@ -66,7 +66,7 @@ Fields required:
 - Injuries or limitations (optional): e.g. "bad left knee"
 - Days available to train per week
 
-### 2.2 Strength Baseline ❌
+### 2.2 Strength Baseline ✅
 To make strength analysis meaningful, the system needs to know the user's starting
 point for key compound lifts. This is collected once during onboarding and updated
 over time.
@@ -78,7 +78,7 @@ Key lifts to capture:
 - Overhead Press (kg)
 - Pull Ups (max reps)
 
-### 2.3 User Profile Endpoints ❌
+### 2.3 User Profile Endpoints ✅
 - POST /users              ← create user + collect profile + strength baseline
 - GET  /users/{user_id}    ← fetch user profile
 - PUT  /users/{user_id}    ← update profile (weight change, goal change, etc.)
