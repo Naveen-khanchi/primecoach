@@ -1,6 +1,9 @@
 import os
-from groq import Groq
+import json
+from groq import Groq, RateLimitError, AuthenticationError, APIConnectionError, InternalServerError
 from dotenv import load_dotenv
+from typing import Optional
+from fastapi import HTTPException
 from app.schemas.session_schema import NormalizedWorkout
 
 load_dotenv()
@@ -34,15 +37,62 @@ def _format_workout(workout: NormalizedWorkout) -> str:
     return "\n".join(lines)
 
 
-def analyze_workout(workout: NormalizedWorkout):
+def _format_user_context(user) -> str:
+    lines = ["---- CLIENT PROFILE ----"]
+    lines.append(f"Name: {user.name}")
+    lines.append(f"Age: {user.age} | Gender: {user.gender}")
+    lines.append(f"Weight: {user.weight_kg} kg | Height: {user.height_cm} cm")
+    lines.append(f"Fitness Level: {user.fitness_level}")
+    lines.append(f"Goal: {user.goal.replace('_', ' ').title()}")
+    lines.append(f"Training Days Available: {user.days_available} days/week")
+
+    if user.target_deadline:
+        lines.append(f"Target Deadline: {user.target_deadline}")
+    if user.injuries:
+        lines.append(f"Injuries / Limitations: {user.injuries}")
+
+    baselines = []
+    if user.bench_press_kg:
+        baselines.append(f"Bench Press: {user.bench_press_kg} kg")
+    if user.squat_kg:
+        baselines.append(f"Squat: {user.squat_kg} kg")
+    if user.deadlift_kg:
+        baselines.append(f"Deadlift: {user.deadlift_kg} kg")
+    if user.overhead_press_kg:
+        baselines.append(f"Overhead Press: {user.overhead_press_kg} kg")
+    if user.pull_ups_max_reps:
+        baselines.append(f"Pull Ups: {user.pull_ups_max_reps} reps max")
+
+    if baselines:
+        lines.append("Strength Baseline: " + " | ".join(baselines))
+    else:
+        lines.append("Strength Baseline: Not provided")
+
+    lines.append("------------------------")
+    return "\n".join(lines)
+
+
+def analyze_workout(workout: NormalizedWorkout, user=None):
     workout_summary = _format_workout(workout)
+    user_context = _format_user_context(user) if user else "No user profile provided."
 
     prompt = f"""
     Analyze the following workout session logged by a client:
 
+    {user_context}
+
     ---- WORKOUT LOG ----
     {workout_summary}
     ---------------------
+
+    Use the client profile above to personalize every section of your analysis:
+    - Score intensity relative to their fitness level (beginner vs advanced standards differ)
+    - Flag if the workout does NOT align with their stated goal
+      (e.g. goal is strength but all sets are 12+ reps — wrong stimulus)
+    - Compare weights used against their strength baseline where available
+      (e.g. if baseline bench is 80kg and they trained at 40kg — flag it)
+    - Factor in any injuries when evaluating exercise selection and giving recommendations
+    - Tailor the next workout plan to their goal and days available per week
 
     Instructions for each section:
 
@@ -141,28 +191,37 @@ def analyze_workout(workout: NormalizedWorkout):
     Do not include markdown, backticks, or any text outside the JSON object.
     """
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are PrimeCoach — an elite strength and conditioning coach with 15+ years of experience "
-                    "training athletes from beginners to competitive lifters. You are direct, specific, and data-driven. "
-                    "You never give vague advice. When data is missing from the workout log, you acknowledge it and "
-                    "work with what is available. You always reference the client's actual exercises — never give "
-                    "generic responses that could apply to any workout."
-                )
-            },
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.4
-    )
-
-    import json
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are PrimeCoach — an elite strength and conditioning coach with 15+ years of experience "
+                        "training athletes from beginners to competitive lifters. You are direct, specific, and data-driven. "
+                        "You never give vague advice. When data is missing from the workout log, you acknowledge it and "
+                        "work with what is available. You always reference the client's actual exercises — never give "
+                        "generic responses that could apply to any workout."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4
+        )
+    except AuthenticationError:
+        raise HTTPException(status_code=500, detail="Groq API key is invalid or missing")
+    except RateLimitError:
+        raise HTTPException(status_code=503, detail="Groq rate limit reached — try again shortly")
+    except APIConnectionError:
+        raise HTTPException(status_code=503, detail="Could not connect to Groq API")
+    except InternalServerError:
+        raise HTTPException(status_code=503, detail="Groq service error — try again later")
 
     content = response.choices[0].message.content
-
     content = content.replace("```json", "").replace("```", "").strip()
 
-    return json.loads(content)
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="Groq returned malformed JSON during analysis")

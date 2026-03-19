@@ -1,23 +1,39 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from typing import Optional, List
-from app.exercise_library import EXERCISES
-from app.schemas.session_schema import Exercise
+from sqlalchemy.orm import Session
+from app.database import get_db
+from app.models.exercise import Exercise
 
 router = APIRouter()
 
 
-@router.get("/", response_model=List[Exercise])
+@router.get("/")
 def get_exercises(
-    muscle: Optional[str] = Query(None),
-    difficulty: Optional[str] = Query(None)
+    muscle: Optional[str] = Query(None, description="Filter by primary muscle (e.g. chest, hamstrings)"),
+    difficulty: Optional[str] = Query(None, description="Filter by difficulty (beginner / intermediate / advanced)"),
+    movement_pattern: Optional[str] = Query(None, description="Filter by movement pattern (push / pull / squat / hinge / lunge)"),
+    db: Session = Depends(get_db)
 ):
-    results = []
-    for muscle_group in EXERCISES.values():
-        for exercises in muscle_group:
-            if muscle and exercises["primary_muscle"] != muscle:
-                continue
-            if difficulty and exercises["difficulty"] != difficulty:
-                continue
-            results.append(exercises)
+    query = db.query(Exercise)
 
-    return results
+    if muscle:
+        query = query.filter(Exercise.primary_muscle.ilike(muscle))
+    if difficulty:
+        query = query.filter(Exercise.difficulty.ilike(difficulty))
+    if movement_pattern:
+        query = query.filter(Exercise.movement_pattern.ilike(movement_pattern))
+
+    exercises = query.order_by(Exercise.name).all()
+
+    return [
+        {
+            "id": ex.id,
+            "name": ex.name,
+            "primary_muscle": ex.primary_muscle,
+            "secondary_muscles": ex.secondary_muscles,
+            "movement_pattern": ex.movement_pattern,
+            "type": ex.type,
+            "difficulty": ex.difficulty,
+        }
+        for ex in exercises
+    ]
