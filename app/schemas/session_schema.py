@@ -10,8 +10,11 @@ class Exercise(BaseModel):
 class NormalizedExercise(BaseModel):
     name: str
     sets: Optional[int] = None
-    reps: Optional[str] = None       # e.g. "8-10", "12", "to failure"
+    reps: Optional[str] = None          # e.g. "8-10", "12", "to failure" — parsed to reps_int on save
     weight_kg: Optional[float] = None
+    primary_muscle: Optional[str] = None    # e.g. "chest", "hamstrings"
+    movement_pattern: Optional[str] = None  # push/pull/squat/hinge/lunge/carry/rotation
+    superset_group: Optional[int] = None    # exercises sharing same group = superset; null = standalone
     notes: Optional[str] = None
 
 class NormalizedWorkout(BaseModel):

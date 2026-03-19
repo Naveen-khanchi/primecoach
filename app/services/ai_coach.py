@@ -1,7 +1,9 @@
 import os
-from groq import Groq
+import json
+from groq import Groq, RateLimitError, AuthenticationError, APIConnectionError, InternalServerError
 from dotenv import load_dotenv
 from typing import Optional
+from fastapi import HTTPException
 from app.schemas.session_schema import NormalizedWorkout
 
 load_dotenv()
@@ -189,28 +191,37 @@ def analyze_workout(workout: NormalizedWorkout, user=None):
     Do not include markdown, backticks, or any text outside the JSON object.
     """
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are PrimeCoach — an elite strength and conditioning coach with 15+ years of experience "
-                    "training athletes from beginners to competitive lifters. You are direct, specific, and data-driven. "
-                    "You never give vague advice. When data is missing from the workout log, you acknowledge it and "
-                    "work with what is available. You always reference the client's actual exercises — never give "
-                    "generic responses that could apply to any workout."
-                )
-            },
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.4
-    )
-
-    import json
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "You are PrimeCoach — an elite strength and conditioning coach with 15+ years of experience "
+                        "training athletes from beginners to competitive lifters. You are direct, specific, and data-driven. "
+                        "You never give vague advice. When data is missing from the workout log, you acknowledge it and "
+                        "work with what is available. You always reference the client's actual exercises — never give "
+                        "generic responses that could apply to any workout."
+                    )
+                },
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.4
+        )
+    except AuthenticationError:
+        raise HTTPException(status_code=500, detail="Groq API key is invalid or missing")
+    except RateLimitError:
+        raise HTTPException(status_code=503, detail="Groq rate limit reached — try again shortly")
+    except APIConnectionError:
+        raise HTTPException(status_code=503, detail="Could not connect to Groq API")
+    except InternalServerError:
+        raise HTTPException(status_code=503, detail="Groq service error — try again later")
 
     content = response.choices[0].message.content
-
     content = content.replace("```json", "").replace("```", "").strip()
 
-    return json.loads(content)
+    try:
+        return json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="Groq returned malformed JSON during analysis")

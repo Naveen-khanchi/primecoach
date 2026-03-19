@@ -1,7 +1,8 @@
 import os
 import json
-from groq import Groq
+from groq import Groq, RateLimitError, AuthenticationError, APIConnectionError, InternalServerError
 from dotenv import load_dotenv
+from fastapi import HTTPException
 from app.schemas.session_schema import NormalizedWorkout
 
 load_dotenv()
@@ -34,7 +35,10 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
                 "sets": <integer or null>,
                 "reps": "<string: '8-10', '12', 'to failure', 'AMRAP' — or null>",
                 "weight_kg": <float or null>,
-                "notes": "<RPE, tempo, form notes, superset info, or any extra detail — or null>"
+                "primary_muscle": "<single primary muscle targeted: chest / back / shoulders / biceps / triceps / hamstrings / quads / glutes / abs / calves / forearms / traps / null>",
+                "movement_pattern": "<push / pull / squat / hinge / lunge / carry / rotation / null>",
+                "superset_group": <integer if this exercise is performed back-to-back with another — group them with the same number; null for standalone>,
+                "notes": "<RPE, tempo, form notes, or any extra detail — or null>"
             }}
         ],
         "workout_type": "<Push / Pull / Legs / Upper Body / Lower Body / Full Body / Cardio / Mobility / null>",
@@ -53,8 +57,17 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
         Leg exercises (squats, lunges, leg press, RDL) → "Legs"
         Mix of push + pull → "Upper Body"
         Mix of upper + lower → "Full Body"
+    - primary_muscle: the single most targeted muscle for that exercise (e.g. Bench Press → "chest", Squat → "quads", RDL → "hamstrings")
+    - movement_pattern: the fundamental movement the exercise belongs to:
+        Bench Press, Overhead Press, Dips, Push Ups → "push"
+        Rows, Pulldowns, Pull Ups, Face Pulls → "pull"
+        Squats, Leg Press, Hack Squat → "squat"
+        Deadlifts, RDL, Good Mornings, Hip Thrusts → "hinge"
+        Lunges, Step Ups, Split Squats → "lunge"
+        Carries, Farmer's Walk → "carry"
+        Cable Twists, Woodchops → "rotation"
+    - superset_group: if exercises are mentioned as a superset or back-to-back, assign them the same integer (1, 2, 3...). Standalone exercises get null.
     - Capture RPE mentions (e.g. "felt like RPE 8", "hard set") in the exercise notes field
-    - Capture rest times, tempo, or superset info in notes if mentioned
     - If a field is genuinely unknown, use null — never invent data
     - Return ONLY the JSON object, no markdown, no explanation, no extra text
 
@@ -62,16 +75,29 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
     {raw_input}
     """
 
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": "You are a precise fitness data extraction assistant. You extract and structure workout data exactly as instructed. You output only valid JSON with no markdown, no commentary, and no invented data."},
-            {"role": "user", "content": prompt}
-        ]
-    )
+    try:
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You are a precise fitness data extraction assistant. You extract and structure workout data exactly as instructed. You output only valid JSON with no markdown, no commentary, and no invented data."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+    except AuthenticationError:
+        raise HTTPException(status_code=500, detail="Groq API key is invalid or missing")
+    except RateLimitError:
+        raise HTTPException(status_code=503, detail="Groq rate limit reached — try again shortly")
+    except APIConnectionError:
+        raise HTTPException(status_code=503, detail="Could not connect to Groq API")
+    except InternalServerError:
+        raise HTTPException(status_code=503, detail="Groq service error — try again later")
 
     content = response.choices[0].message.content
     content = content.replace("```json", "").replace("```", "").strip()
 
-    data = json.loads(content)
+    try:
+        data = json.loads(content)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=502, detail="Groq returned malformed JSON during normalization")
+
     return NormalizedWorkout(**data)

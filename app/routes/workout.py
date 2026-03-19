@@ -5,6 +5,7 @@ from app.database import get_db
 from app.models.user import User
 from app.services.normalizer import normalize_workout_input
 from app.services.ai_coach import analyze_workout
+from app.services.session_service import save_session
 
 router = APIRouter()
 
@@ -31,8 +32,17 @@ def analyze(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
 
+    session_id = None
+    if user_id:
+        try:
+            saved = save_session(user_id, normalized, analysis, db)
+            session_id = saved.id
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to save session: {str(e)}")
+
     return {
         "user": user.name if user else None,
+        "session_id": session_id,
         "normalized_input": normalized.model_dump(),
         "analysis": analysis
     }
