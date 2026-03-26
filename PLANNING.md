@@ -42,10 +42,11 @@ Routers registered in main.py:
 - POST /users             ← create user profile
 - GET  /users/{user_id}   ← fetch user profile
 
-### 1.3 Exercise Library ⚠️
-Static list of 6 hardcoded exercises lives in `exercise_library.py` (legacy, kept for
-reference). Replaced in Phase 4 by a proper `exercises` DB table that grows
-automatically via upsert as users log workouts.
+### 1.3 Exercise Library ✅
+Static list in `exercise_library.py` is legacy and kept for reference only. Replaced in
+Phase 4 by the `exercises` DB table that grows automatically via upsert as users log
+workouts. `GET /exercises` now queries the DB with muscle/difficulty/movement_pattern
+filters.
 
 ### 1.4 Database ✅
 SQLite via SQLAlchemy ORM. `database.py` defines engine, `SessionLocal`, `Base`,
@@ -137,8 +138,8 @@ If found → use its ID. If not → insert a new row. This means the exercise li
 grows automatically as users log new exercises, with no manual seeding required.
 Implemented in `services/session_service.py` → `_upsert_exercise()`.
 
-**Normalizer updated:** Returns `primary_muscle`, `movement_pattern`, and `superset_group`
-per exercise. `NormalizedExercise` schema updated to include these fields.
+**Normalizer returns:** `primary_muscle`, `movement_pattern`, and `superset_group`
+per exercise. `NormalizedExercise` schema includes these fields.
 
 ### 4.1 Session Storage ✅
 **Design: `workout_sessions` table**
@@ -185,49 +186,47 @@ Saving is skipped silently if no `user_id` is provided.
 
 ---
 
-## Phase 5 — Progress Analysis
+## Phase 5 — Progress Analysis ✅
 
-### 5.1 Strength Progression Tracking ❌
-Query `session_exercises` grouped by `exercise_id` (or name for unmatched), ordered by
-`workout_sessions.created_at`. For key compound lifts, track max weight per session.
+### 5.1 Strength Progression Tracking ✅
+`services/progress_service.py` queries `session_exercises` grouped by exercise name,
+ordered by `workout_sessions.created_at`. Tracks max weight per session per lift.
 
-Detect:
+Detects:
 - **Progressive overload** — weight consistently increasing (positive signal)
 - **Plateau** — same weight for 3+ sessions on a lift (needs intervention)
 - **Regression** — weight going down over time (flag for investigation)
 
 Output per lift: `[{date, weight_kg, sets, reps}]` array — ready for a chart.
 
-### 5.2 Volume Trend Analysis ❌
-Group `session_exercises` by `primary_muscle` and week. Sum `sets × reps × weight_kg`
+### 5.2 Volume Trend Analysis ✅
+Groups `session_exercises` by `primary_muscle` and week. Sums `sets × reps × weight_kg`
 per muscle per week.
 
-Detect:
+Detects:
 - Muscles being consistently overtrained (appear in every session)
 - Muscles being consistently neglected (haven't appeared in 2+ weeks)
 - Whether overall volume is increasing, stable, or declining
 
-### 5.3 Consistency & Pattern Detection ❌
-Query sessions by date, group by week.
+### 5.3 Consistency & Pattern Detection ✅
+Queries sessions by date, groups by week.
 
-Detect:
+Detects:
 - Actual sessions per week vs `user.days_available` (are they hitting their target?)
 - Which muscle groups are skipped across multiple sessions
 - Whether the user repeatedly trains the same muscles (e.g. chest 4x/week, legs 0x)
 - Long gaps between sessions (>7 days without logging)
 
-### 5.4 AI Progress Summary ❌
-After computing raw metrics (5.1–5.3), pass aggregated data to Groq with user profile
-for a written human-readable report answering:
+### 5.4 AI Progress Summary ✅
+After computing raw metrics (5.1–5.3), `services/progress_analyzer.py` passes aggregated
+data to Groq with user profile for a written human-readable report:
 - Is progress on track relative to their goal and `target_deadline`?
 - What has improved since they started?
 - Where is the user lacking (consistently undertrained muscles, stalling lifts)?
 - What patterns might be blocking progress (inconsistency, muscle imbalance, no overload)?
 - Adjusted focus for the next 2–4 weeks based on actual data
 
-New service: `services/progress_analyzer.py`
-
-### 5.5 Progress Endpoints ❌
+### 5.5 Progress Endpoints ✅
 - `GET /progress/{user_id}`              ← full progress report (raw data + AI insights)
 - `GET /progress/{user_id}/strength`     ← per-lift progression chart data
 - `GET /progress/{user_id}/volume`       ← volume trends per muscle group per week
@@ -267,33 +266,46 @@ New service: `services/progress_analyzer.py`
 
 ---
 
-## Phase 6 — AI Recommendation Engine (Goal + History Aware)
+## Phase 6 — AI Recommendation Engine (Goal + History Aware) ✅
 
-### 6.1 Replace Hardcoded Recommendations ❌
-Current recommendation engine in `services/recommendation_engine.py` is hardcoded:
-- if back == 0 → recommend Pull Ups
-- if legs == 0 → recommend Squats
+### 6.1 Replace Hardcoded Recommendations ✅
+`services/recommendation_engine.py` replaced with AI-powered service using user goal,
+session history (via `recommendation_service.py`), and detected weaknesses.
 
-Replace with AI-powered service using user goal, session history, and detected weaknesses.
-
-### 6.2 Next Session Recommendation ❌
-Based on last session and weekly training history, recommend exactly what the next
-session should look like:
+### 6.2 Next Session Recommendation ✅
+`services/recommendation_engine.py` — based on last session and weekly training history:
 - Which muscle group to train and why (based on what hasn't been trained recently)
 - Which exercises to do (with sets, reps, weight targets based on progression data)
 - Rationale for each recommendation
 
-### 6.3 Weekly Plan Generation ❌
-Based on user profile (goal, days_available, fitness_level) and current progress,
-generate a full week training plan:
+### 6.3 Weekly Plan Generation ✅
+`services/recommendation_engine.py` — based on user profile and current progress:
 - Day-by-day breakdown
 - Each session: exercises, sets, reps, weight guidance
 - Rest days specified
-- Plan adjusts weekly based on actual logged sessions
+- Plan informed by actual recent session data
 
-### 6.4 Recommendation Endpoints ❌
+### 6.4 Recommendation Endpoints ✅
 - `GET /recommendations/{user_id}/next-session`  ← what to do next
 - `GET /recommendations/{user_id}/weekly-plan`   ← full week plan
+
+---
+
+## Phase 7 — User Onboarding & Profile Management
+
+### 7.1 Update User Profile ❌
+`PUT /users/{user_id}` — allow updating any user profile field (weight, goal, fitness_level,
+strength baselines, injuries, etc.). Useful after re-tests or goal changes.
+
+### 7.2 User Onboarding Flow ❌
+Guided onboarding for new users:
+- Step-by-step profile creation (name/age/body metrics → goal → training availability → strength baselines)
+- Validation at each step with helpful error messages
+- Returns onboarding status so clients know if profile is complete
+
+### 7.3 Onboarding Status Check ❌
+`GET /users/{user_id}/onboarding-status` — returns which fields are filled vs missing,
+and whether the user is ready for full AI-personalized analysis.
 
 ---
 
@@ -303,10 +315,10 @@ generate a full week training plan:
 Phase 1 — Foundation              ✅ Complete
   1.1 Project structure           ✅
   1.2 Routing                     ✅
-  1.3 Exercise library            ⚠️ Static — replaced by DB table in Phase 4
+  1.3 Exercise library            ✅ DB-backed; static file kept for reference
   1.4 Database                    ✅
 
-Phase 2 — User Profile            ✅ Complete
+Phase 2 — User Profile            ⚠️ Mostly complete
   2.1 Profile schema              ✅
   2.2 User DB model               ✅
   2.3 POST/GET /users             ✅
@@ -316,7 +328,6 @@ Phase 3 — Workout Analysis        ✅ Complete
   3.1 Input normalization         ✅
   3.2 AI coaching analysis        ✅
   3.3 User-aware analysis         ✅
-  Pending: primary_muscle in normalizer output
 
 Phase 4 — Exercise Registry & Sessions  ✅ Complete
   4.0 exercises table + upsert    ✅
@@ -338,6 +349,11 @@ Phase 6 — Recommendation Engine   ✅ Complete
   6.2 Next session recommendation ✅
   6.3 Weekly plan generation      ✅
   6.4 Recommendation endpoints    ✅
+
+Phase 7 — User Onboarding & Profile Management  ❌ In progress
+  7.1 PUT /users/{user_id}        ❌ Update profile
+  7.2 Onboarding flow             ❌ Guided multi-step profile creation
+  7.3 Onboarding status check     ❌ GET /users/{user_id}/onboarding-status
 ```
 
 ---
@@ -347,10 +363,11 @@ Phase 6 — Recommendation Engine   ✅ Complete
 | Method | Endpoint                          | Status | Description                              |
 |--------|-----------------------------------|--------|------------------------------------------|
 | POST   | /workout/analyze                  | ✅     | Normalize + AI analyze + save session    |
-| GET    | /exercises                        | ⚠️     | List exercises (static library, buggy)   |
+| GET    | /exercises                        | ✅     | List exercises from DB (muscle/difficulty/movement_pattern filters) |
 | POST   | /users                            | ✅     | Create user profile                      |
 | GET    | /users/{user_id}                  | ✅     | Get user profile                         |
-| PUT    | /users/{user_id}                  | ❌     | Update user profile                      |
+| PUT    | /users/{user_id}                  | ❌     | Update user profile (Phase 7)            |
+| GET    | /users/{user_id}/onboarding-status| ❌     | Onboarding completeness check (Phase 7)  |
 | GET    | /sessions/{user_id}               | ✅     | Session history summary for user         |
 | GET    | /sessions/{user_id}/{session_id}  | ✅     | Full session with exercises + AI analysis|
 | GET    | /progress/{user_id}               | ✅     | Full progress report                     |
@@ -383,7 +400,7 @@ app/
 ├── routes/
 │   ├── workout.py                 ✅ POST /workout/analyze (saves session after analysis)
 │   ├── users.py                   ✅ POST+GET /users
-│   ├── exercises.py               ⚠️ GET /exercises (static, buggy filter)
+│   ├── exercises.py               ✅ GET /exercises (DB query, muscle/difficulty/movement_pattern filters)
 │   ├── sessions.py                ✅ GET /sessions/{user_id}, GET /sessions/{user_id}/{id}
 │   ├── progress.py                ✅ GET /progress/*
 │   └── recommendations.py         ✅ GET /recommendations/*
