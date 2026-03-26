@@ -43,6 +43,33 @@ PrimeCoach is a FastAPI backend for AI-powered personal fitness coaching. It tak
 ### `GET /users/{user_id}`
 Fetches user profile from `users` table. 404 if not found.
 
+### `GET /exercises`
+Queries the `exercises` DB table (auto-populated via upsert when users log workouts). Supports optional filters: `muscle`, `difficulty`, `movement_pattern`. Returns matching exercises.
+
+### `GET /sessions/{user_id}`
+Lists all past workout sessions for a user (summaries — date, type, scores, volume). No full AI analysis included.
+
+### `GET /sessions/{user_id}/{session_id}`
+Returns full detail of one session — all exercises with sets/reps/weight + the stored AI analysis JSON.
+
+### `GET /progress/{user_id}`
+Full progress report combining raw metrics (strength, volume, consistency) with AI-generated insights. Tells the user if they're on track, what's improving, and what to focus on.
+
+### `GET /progress/{user_id}/strength`
+Per-lift progression data (weight over time per exercise). Detects progressive overload, plateaus, and regression.
+
+### `GET /progress/{user_id}/volume`
+Volume trends per muscle group per week. Detects overtrained and neglected muscles.
+
+### `GET /progress/{user_id}/consistency`
+Training frequency vs target, gap periods, and muscle skip patterns.
+
+### `GET /recommendations/{user_id}/next-session`
+AI-powered suggestion for what to train next — which muscles, exercises, sets/reps/weight targets, and rationale. Based on last session, recent history, and user goals.
+
+### `GET /recommendations/{user_id}/weekly-plan`
+Full week plan — day-by-day breakdown with exercises, sets, reps, weight guidance, and rest days. Built from actual user data, not generic templates.
+
 ---
 
 ## Key Files
@@ -119,7 +146,9 @@ Canonical exercise registry. Grows automatically via upsert as users log new exe
 | name | TEXT UNIQUE | canonical name e.g. "Romanian Deadlift" |
 | primary_muscle | TEXT | e.g. "hamstrings" |
 | secondary_muscles | TEXT | comma-separated |
+| movement_pattern | TEXT | push / pull / squat / hinge / lunge / carry / rotation |
 | type | TEXT | compound / isolation |
+| equipment | TEXT | barbell / dumbbell / machine / bodyweight |
 | difficulty | TEXT | beginner / intermediate / advanced |
 
 **Upsert rule:** After normalization, look up by name (case-insensitive). Use existing ID or insert new row.
@@ -200,5 +229,7 @@ All services handle Groq errors consistently: `AuthenticationError` → 500, `Ra
 
 ---
 
-## Known Issues
+## Known Issues / Upcoming (Phase 7)
 - `PUT /users/{user_id}` (update profile) not yet implemented
+- `GET /users/{user_id}/onboarding-status` (profile completeness check) not yet implemented
+- Guided user onboarding flow not yet implemented

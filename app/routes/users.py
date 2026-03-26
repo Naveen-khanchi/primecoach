@@ -22,3 +22,10 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@router.post("/update")
+def update_user(user_id: int, name: str, db: Session = Depends(get_db)):
+    user_details = get_user(user_id, db)
+    db.query(User).filter(User.id == user_id).update({"name": name})
+    db.commit()
+    return user_details
