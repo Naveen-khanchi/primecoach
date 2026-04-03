@@ -1,0 +1,10 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.db
+.env
+.git/
+.gitignore
+CLAUDE.md
+PLANNING.md
