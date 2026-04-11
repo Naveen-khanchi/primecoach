@@ -45,7 +45,7 @@ export default function LoginPage() {
 
     setTimeout(() => {
       setLoading(false);
-      router.push("/app/dashboard");
+      router.push("/dashboard");
     }, 500);
   }
 
