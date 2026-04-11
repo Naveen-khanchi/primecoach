@@ -154,7 +154,7 @@ export default function DashboardPage() {
               <XAxis dataKey="week" tickLine={false} fontSize={12} />
               <YAxis axisLine={false} tickLine={false} fontSize={12} tickFormatter={(v) => `${v / 1000}k`} />
               <Bar dataKey="volume" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} activeBar={false}>
-                <LabelList dataKey="volume" position="top" fontSize={13} fontWeight={500} offset={8} formatter={(v: number) => `${(v / 1000).toFixed(1)}k`} />
+                <LabelList dataKey="volume" position="top" fontSize={13} fontWeight={500} offset={8} formatter={(v) => `${(Number(v) / 1000).toFixed(1)}k`} />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
