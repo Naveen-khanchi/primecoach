@@ -18,13 +18,13 @@ import {
 import { useState } from "react";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/workout/log", label: "Log Workout", icon: ClipboardPen },
-  { href: "/workout/history", label: "Sessions", icon: History },
-  { href: "/progress", label: "Progress", icon: TrendingUp },
-  { href: "/recommendations/next-session", label: "Recommendations", icon: Brain },
-  { href: "/exercises", label: "Exercises", icon: Library },
-  { href: "/profile", label: "Profile", icon: User },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, disabled: false },
+  { href: "/workout/log", label: "Log Workout", icon: ClipboardPen, disabled: false },
+  { href: "/workout/history", label: "Sessions", icon: History, disabled: true },
+  { href: "/progress", label: "Progress", icon: TrendingUp, disabled: true },
+  { href: "/recommendations/next-session", label: "Recommendations", icon: Brain, disabled: true },
+  { href: "/exercises", label: "Exercises", icon: Library, disabled: true },
+  { href: "/profile", label: "Profile", icon: User, disabled: false },
 ];
 
 export default function Sidebar() {
@@ -71,6 +71,19 @@ export default function Sidebar() {
           <ul className="flex flex-col gap-1">
             {navItems.map((item) => {
               const active = pathname === item.href || pathname.startsWith(item.href + "/");
+
+              if (item.disabled) {
+                return (
+                  <li key={item.href}>
+                    <span className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-muted-foreground/40 cursor-not-allowed">
+                      <item.icon className="size-4" />
+                      {item.label}
+                      <span className="ml-auto text-[10px] bg-muted px-1.5 py-0.5 rounded">Soon</span>
+                    </span>
+                  </li>
+                );
+              }
+
               return (
                 <li key={item.href}>
                   <Link
