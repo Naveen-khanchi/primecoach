@@ -8,7 +8,7 @@ const pages = [
   { href: "/login", label: "Login", done: true },
   { href: "/onboarding", label: "Onboarding", done: true },
   { href: "/dashboard", label: "Dashboard", done: true },
-  { href: "/workout", label: "Log Workout", done: false },
+  { href: "/workout/log", label: "Log Workout", done: true },
   { href: "/workout/history", label: "Sessions History", done: false },
   { href: "/progress", label: "Progress", done: false },
   { href: "/recommendations/next-session", label: "Recommendations", done: false },
