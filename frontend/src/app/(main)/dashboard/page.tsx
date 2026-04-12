@@ -204,7 +204,7 @@ export default function DashboardPage() {
 
           <div className="mt-5 grid grid-cols-2 gap-3">
             {[
-              { href: "/workout", label: "Log Workout", icon: ClipboardPen },
+              { href: "/workout/log", label: "Log Workout", icon: ClipboardPen },
               { href: "/progress", label: "View Progress", icon: TrendingUp },
               { href: "/recommendations/next-session", label: "Weekly Plan", icon: CalendarDays },
               { href: "/profile", label: "Update Profile", icon: User },

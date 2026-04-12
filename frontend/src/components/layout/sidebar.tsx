@@ -19,7 +19,7 @@ import { useState } from "react";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/workout", label: "Log Workout", icon: ClipboardPen },
+  { href: "/workout/log", label: "Log Workout", icon: ClipboardPen },
   { href: "/workout/history", label: "Sessions", icon: History },
   { href: "/progress", label: "Progress", icon: TrendingUp },
   { href: "/recommendations/next-session", label: "Recommendations", icon: Brain },
