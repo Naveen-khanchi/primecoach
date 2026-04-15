@@ -37,31 +37,30 @@ def _format_workout(workout: NormalizedWorkout) -> str:
     return "\n".join(lines)
 
 
-def _format_user_context(user) -> str:
+def _format_user_context(profile) -> str:
     lines = ["---- CLIENT PROFILE ----"]
-    lines.append(f"Name: {user.name}")
-    lines.append(f"Age: {user.age} | Gender: {user.gender}")
-    lines.append(f"Weight: {user.weight_kg} kg | Height: {user.height_cm} cm")
-    lines.append(f"Fitness Level: {user.fitness_level}")
-    lines.append(f"Goal: {user.goal.replace('_', ' ').title()}")
-    lines.append(f"Training Days Available: {user.days_available} days/week")
+    lines.append(f"Age: {profile.age} | Gender: {profile.gender}")
+    lines.append(f"Weight: {profile.weight_kg} kg | Height: {profile.height_cm} cm")
+    lines.append(f"Fitness Level: {profile.fitness_level}")
+    lines.append(f"Goal: {profile.goal.replace('_', ' ').title()}")
+    lines.append(f"Training Days Available: {profile.days_available} days/week")
 
-    if user.target_deadline:
-        lines.append(f"Target Deadline: {user.target_deadline}")
-    if user.injuries:
-        lines.append(f"Injuries / Limitations: {user.injuries}")
+    if profile.target_deadline:
+        lines.append(f"Target Deadline: {profile.target_deadline}")
+    if profile.injuries:
+        lines.append(f"Injuries / Limitations: {profile.injuries}")
 
     baselines = []
-    if user.bench_press_kg:
-        baselines.append(f"Bench Press: {user.bench_press_kg} kg")
-    if user.squat_kg:
-        baselines.append(f"Squat: {user.squat_kg} kg")
-    if user.deadlift_kg:
-        baselines.append(f"Deadlift: {user.deadlift_kg} kg")
-    if user.overhead_press_kg:
-        baselines.append(f"Overhead Press: {user.overhead_press_kg} kg")
-    if user.pull_ups_max_reps:
-        baselines.append(f"Pull Ups: {user.pull_ups_max_reps} reps max")
+    if profile.bench_press_kg:
+        baselines.append(f"Bench Press: {profile.bench_press_kg} kg")
+    if profile.squat_kg:
+        baselines.append(f"Squat: {profile.squat_kg} kg")
+    if profile.deadlift_kg:
+        baselines.append(f"Deadlift: {profile.deadlift_kg} kg")
+    if profile.overhead_press_kg:
+        baselines.append(f"Overhead Press: {profile.overhead_press_kg} kg")
+    if profile.pull_ups_max_reps:
+        baselines.append(f"Pull Ups: {profile.pull_ups_max_reps} reps max")
 
     if baselines:
         lines.append("Strength Baseline: " + " | ".join(baselines))

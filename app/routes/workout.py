@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import Any, Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models.user import User
+from app.models.user import User, UserProfile
 from app.services.normalizer import normalize_workout_input
 from app.services.ai_coach import analyze_workout
 from app.services.session_service import save_session
@@ -16,11 +16,14 @@ def analyze(
     user_id: Optional[int] = Query(None, description="User ID to personalize the analysis"),
     db: Session = Depends(get_db)
 ):
-    user = None
+    profile = None
+    user_name = None
     if user_id:
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")
+        user_name = user.name
+        profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
     try:
         normalized = normalize_workout_input(workout_input)
@@ -28,7 +31,7 @@ def analyze(
         raise HTTPException(status_code=422, detail=f"Could not parse workout input: {str(e)}")
 
     try:
-        analysis = analyze_workout(normalized, user)
+        analysis = analyze_workout(normalized, profile)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
 
@@ -41,7 +44,7 @@ def analyze(
             raise HTTPException(status_code=500, detail=f"Failed to save session: {str(e)}")
 
     return {
-        "user": user.name if user else None,
+        "user": user_name,
         "session_id": session_id,
         "normalized_input": normalized.model_dump(),
         "analysis": analysis
