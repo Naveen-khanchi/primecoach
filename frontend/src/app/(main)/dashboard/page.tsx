@@ -59,7 +59,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="p-6 flex flex-col">
           <div className="flex items-center gap-2">
-            <Dumbbell className="size-5 text-primary" />
+            <Dumbbell className="size-5 text-primary" />  
             <h2 className="text-lg font-semibold">Next Workout</h2>
           </div>
           <p className="text-sm text-muted-foreground mt-1">Pull Day</p>

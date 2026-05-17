@@ -14,6 +14,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Dumbbell, ArrowRight, ArrowLeft } from "lucide-react";
+import { createOrUpdateProfile } from "@/lib/api";
+import axios from "axios";
 
 const GOALS = [
   { value: "muscle_gain", label: "Muscle Gain" },
@@ -73,14 +75,32 @@ export default function OnboardingPage() {
 
   async function handleSubmit() {
     setLoading(true);
+    setError("");
 
-    // TODO: Replace with actual API call
-    // await axios.post("/users", { ...form });
-
-    setTimeout(() => {
-      setLoading(false);
+    try {
+      const userId = Number(localStorage.getItem("userId"));
+      await createOrUpdateProfile(userId, {
+        age: Number(form.age),
+        weight_kg: Number(form.weight_kg),
+        height_cm: Number(form.height_cm),
+        gender: form.gender,
+        goal: form.goals[0],
+        bench_press_kg: form.bench_press_kg ? Number(form.bench_press_kg) : undefined,
+        squat_kg: form.squat_kg ? Number(form.squat_kg) : undefined,
+        deadlift_kg: form.deadlift_kg ? Number(form.deadlift_kg) : undefined,
+        overhead_press_kg: form.overhead_press_kg ? Number(form.overhead_press_kg) : undefined,
+        pull_ups_max_reps: form.pull_ups_max_reps ? Number(form.pull_ups_max_reps) : undefined,
+      });
       router.push("/dashboard");
-    }, 500);
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError("Something Went Wrong. Please Try Again.");
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
