@@ -1,42 +1,64 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  User,
   Dumbbell,
   Target,
   Pencil,
+  Loader2,
 } from "lucide-react";
+import { getUser, getProfile } from "@/lib/api";
 
-const dummyUser = {
-  name: "Naveen",
-  age: 25,
-  gender: "Male",
-  weight_kg: 75,
-  height_cm: 175,
-  fitness_level: "Intermediate",
-  goal: "Muscle Gain",
-  days_available: 5,
-  target_deadline: "12 weeks",
-  injuries: "Lower back tightness",
-  bench_press_kg: 80,
-  squat_kg: 100,
-  deadlift_kg: 140,
-  overhead_press_kg: 45,
-  pull_ups_max_reps: 12,
-};
+function fmt(value: string | null | undefined) {
+  if (!value) return "—";
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
-function InfoRow({ label, value }: { label: string; value: string | number }) {
+function InfoRow({ label, value }: { label: string; value: string | number | null | undefined }) {
   return (
     <div className="flex justify-between py-2">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{value}</span>
+      <span className="text-sm font-medium">{value ?? "—"}</span>
     </div>
   );
 }
 
 export default function ProfilePage() {
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [profile, setProfile] = useState<Record<string, any> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      const userId = Number(localStorage.getItem("userId"));
+      if (!userId) return;
+
+      try {
+        const [userRes, profileRes] = await Promise.all([
+          getUser(userId),
+          getProfile(userId),
+        ]);
+        setUser(userRes.data);
+        setProfile(profileRes.data);
+      } catch {
+        // profile may not exist yet — user is still shown
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -59,13 +81,13 @@ export default function ProfilePage() {
           <div className="flex flex-col items-center gap-3 md:min-w-[200px]">
             <div className="size-24 rounded-full bg-primary/10 flex items-center justify-center">
               <span className="text-3xl font-bold text-primary">
-                {dummyUser.name.charAt(0)}
+                {user?.name?.charAt(0) ?? "?"}
               </span>
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold">{dummyUser.name}</p>
+              <p className="text-lg font-semibold">{user?.name ?? "—"}</p>
               <p className="text-sm text-muted-foreground">
-                {dummyUser.goal} &bull; {dummyUser.fitness_level}
+                {fmt(profile?.goal)} &bull; {fmt(profile?.fitness_level)}
               </p>
             </div>
           </div>
@@ -74,19 +96,19 @@ export default function ProfilePage() {
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Age</span>
-              <span className="text-lg font-semibold">{dummyUser.age}</span>
+              <span className="text-lg font-semibold">{profile?.age ?? "—"}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Gender</span>
-              <span className="text-lg font-semibold">{dummyUser.gender}</span>
+              <span className="text-lg font-semibold">{fmt(profile?.gender)}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Weight</span>
-              <span className="text-lg font-semibold">{dummyUser.weight_kg} kg</span>
+              <span className="text-lg font-semibold">{profile?.weight_kg ? `${profile.weight_kg} kg` : "—"}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Height</span>
-              <span className="text-lg font-semibold">{dummyUser.height_cm} cm</span>
+              <span className="text-lg font-semibold">{profile?.height_cm ? `${profile.height_cm} cm` : "—"}</span>
             </div>
           </div>
         </div>
@@ -99,13 +121,12 @@ export default function ProfilePage() {
             <Target className="size-5 text-primary" />
             <h2 className="text-lg font-semibold">Fitness Settings</h2>
           </div>
-
           <div className="divide-y">
-            <InfoRow label="Goal" value={dummyUser.goal} />
-            <InfoRow label="Fitness Level" value={dummyUser.fitness_level} />
-            <InfoRow label="Days / Week" value={dummyUser.days_available} />
-            <InfoRow label="Target Deadline" value={dummyUser.target_deadline} />
-            <InfoRow label="Injuries" value={dummyUser.injuries} />
+            <InfoRow label="Goal" value={fmt(profile?.goal)} />
+            <InfoRow label="Fitness Level" value={fmt(profile?.fitness_level)} />
+            <InfoRow label="Days / Week" value={profile?.days_available} />
+            <InfoRow label="Target Deadline" value={profile?.target_deadline} />
+            <InfoRow label="Injuries" value={profile?.injuries} />
           </div>
         </Card>
 
@@ -114,13 +135,12 @@ export default function ProfilePage() {
             <Dumbbell className="size-5 text-primary" />
             <h2 className="text-lg font-semibold">Strength Baselines</h2>
           </div>
-
           <div className="divide-y">
-            <InfoRow label="Bench Press" value={`${dummyUser.bench_press_kg} kg`} />
-            <InfoRow label="Squat" value={`${dummyUser.squat_kg} kg`} />
-            <InfoRow label="Deadlift" value={`${dummyUser.deadlift_kg} kg`} />
-            <InfoRow label="Overhead Press" value={`${dummyUser.overhead_press_kg} kg`} />
-            <InfoRow label="Pull-ups" value={`${dummyUser.pull_ups_max_reps} reps`} />
+            <InfoRow label="Bench Press" value={profile?.bench_press_kg ? `${profile.bench_press_kg} kg` : null} />
+            <InfoRow label="Squat" value={profile?.squat_kg ? `${profile.squat_kg} kg` : null} />
+            <InfoRow label="Deadlift" value={profile?.deadlift_kg ? `${profile.deadlift_kg} kg` : null} />
+            <InfoRow label="Overhead Press" value={profile?.overhead_press_kg ? `${profile.overhead_press_kg} kg` : null} />
+            <InfoRow label="Pull-ups" value={profile?.pull_ups_max_reps ? `${profile.pull_ups_max_reps} reps` : null} />
           </div>
         </Card>
       </div>

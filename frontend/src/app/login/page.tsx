@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
 import SignupIllustration from "@/components/shared/signup-illustration";
+import { login } from "@/lib/api";
+import axios from "axios";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,13 +42,22 @@ export default function LoginPage() {
 
     setLoading(true);
 
-    // TODO: Replace with actual API call when auth backend is ready
-    // await axios.post("/auth/login", { email: form.email, password: form.password });
-
-    setTimeout(() => {
+    try{
+      const res = await login({
+        email : form.email,
+        password: form.password
+      });
+      localStorage.setItem("userId", res.data.id);
+      router.push("/dashboard")
+    } catch(err){
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      }else{
+        setError("Something Went Wrong. Please Try Again.")
+      }
+    }finally{
       setLoading(false);
-      router.push("/dashboard");
-    }, 500);
+    }
   }
 
   return (

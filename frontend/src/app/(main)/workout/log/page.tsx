@@ -16,6 +16,8 @@ import {
   ShieldCheck,
   BedDouble,
 } from "lucide-react";
+import {analyzeWorkout} from "@/lib/api";
+import axios from "axios";
 
 const examples = [
   "Bench press 4x8 80kg, incline dumbbell press 3x10 30kg, cable flyes 3x12 15kg",
@@ -85,11 +87,20 @@ export default function WorkoutLogPage() {
     setLoading(true);
     setError("");
 
-    // TODO: Replace with actual API call
-    setTimeout(() => {
-      setResult(dummyResult);
-      setLoading(false);
-    }, 1500);
+    try{
+      const userID = Number(localStorage.getItem("userId"));
+      const res = await analyzeWorkout(userID, input);
+      setResult(res.data);
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.data?.detail) {
+        const detail = err.response.data.detail;
+        setError(typeof detail === "string" ? detail : "Something Went Wrong. Please Try Again.");
+      } else {
+        setError("Something Went Wrong. Please Try Again.");
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   function handleReset() {
@@ -113,37 +124,40 @@ export default function WorkoutLogPage() {
   }
 
   if (result) {
+    const normalized = result.normalized_input;
+    const analysis = result.analysis;
+
     return (
       <div className="space-y-8">
         {/* Header */}
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Workout Analysis</h1>
           <p className="text-muted-foreground mt-1">
-            {result.workout_type} Day &bull; {result.date}
+            {normalized.workout_type ?? "Workout"} Day
           </p>
         </div>
 
         {/* Score Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <ScoreCard icon={Trophy} label="Overall" value={result.score_breakdown.overall} />
-          <ScoreCard icon={Zap} label="Intensity" value={result.score_breakdown.intensity} />
-          <ScoreCard icon={BarChart3} label="Volume" value={result.score_breakdown.volume} />
-          <ScoreCard icon={Dumbbell} label="Selection" value={result.score_breakdown.exercise_selection} />
-          <ScoreCard icon={Scale} label="Balance" value={result.score_breakdown.muscle_balance} />
+          <ScoreCard icon={Trophy} label="Overall" value={analysis.score_breakdown.overall} />
+          <ScoreCard icon={Zap} label="Intensity" value={analysis.score_breakdown.intensity} />
+          <ScoreCard icon={BarChart3} label="Volume" value={analysis.score_breakdown.volume} />
+          <ScoreCard icon={Dumbbell} label="Selection" value={analysis.score_breakdown.exercise_selection} />
+          <ScoreCard icon={Scale} label="Balance" value={analysis.score_breakdown.muscle_balance} />
         </div>
 
         {/* Exercises Logged */}
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Exercises Logged</h2>
           <div className="divide-y">
-            {result.exercises.map((ex: { name: string; sets: number; reps: string; weight_kg: number; primary_muscle: string }, i: number) => (
+            {normalized.exercises.map((ex: { name: string; sets: number; reps: string; weight_kg: number; primary_muscle: string }, i: number) => (
               <div key={i} className="flex items-center justify-between py-3">
                 <div>
                   <p className="text-sm font-medium">{ex.name}</p>
                   <p className="text-xs text-muted-foreground">{ex.primary_muscle}</p>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {ex.sets} x {ex.reps} &bull; {ex.weight_kg} kg
+                  {ex.sets} x {ex.reps}{ex.weight_kg ? ` • ${ex.weight_kg} kg` : ""}
                 </p>
               </div>
             ))}
@@ -155,12 +169,9 @@ export default function WorkoutLogPage() {
           <Card className="p-6">
             <div className="flex items-center gap-2 mb-3">
               <ShieldCheck className="size-5 text-green-600" />
-              <h2 className="text-lg font-semibold">Strengths</h2>
+              <h2 className="text-lg font-semibold">Analysis</h2>
             </div>
-            <ul className="space-y-2">
-              <li className="text-sm text-muted-foreground">&bull; {result.analysis.training_stimulus}</li>
-              <li className="text-sm text-muted-foreground">&bull; {result.analysis.muscle_focus}</li>
-            </ul>
+            <p className="text-sm text-muted-foreground leading-relaxed">{analysis.analysis}</p>
           </Card>
 
           <Card className="p-6">
@@ -168,10 +179,11 @@ export default function WorkoutLogPage() {
               <Zap className="size-5 text-amber-500" />
               <h2 className="text-lg font-semibold">Improvements</h2>
             </div>
-            <ul className="space-y-2">
-              {result.improvements.map((imp: string, i: number) => (
+            <ul className="space-y-3">
+              {analysis.improvements.map((imp: { action: string; benefit: string }, i: number) => (
                 <li key={i} className="text-sm text-muted-foreground flex gap-2">
-                  <span className="text-amber-500 font-semibold">{i + 1}.</span> {imp}
+                  <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
+                  <span><span className="text-foreground font-medium">{imp.action}</span> — {imp.benefit}</span>
                 </li>
               ))}
             </ul>
@@ -184,7 +196,7 @@ export default function WorkoutLogPage() {
             <MessageSquare className="size-5 text-primary" />
             <h2 className="text-lg font-semibold">Coach Message</h2>
           </div>
-          <p className="text-sm leading-relaxed">{result.coach_message}</p>
+          <p className="text-sm leading-relaxed">{analysis.coach_message}</p>
         </Card>
 
         {/* Warnings + Recovery */}
@@ -194,11 +206,15 @@ export default function WorkoutLogPage() {
               <AlertTriangle className="size-5 text-red-500" />
               <h2 className="text-lg font-semibold">Warnings</h2>
             </div>
-            <ul className="space-y-2">
-              {result.warnings.map((w: string, i: number) => (
-                <li key={i} className="text-sm text-muted-foreground">&bull; {w}</li>
-              ))}
-            </ul>
+            {analysis.warnings.length > 0 ? (
+              <ul className="space-y-2">
+                {analysis.warnings.map((w: string, i: number) => (
+                  <li key={i} className="text-sm text-muted-foreground">&bull; {w}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">No warnings — great session!</p>
+            )}
           </Card>
 
           <Card className="p-6">
@@ -207,11 +223,26 @@ export default function WorkoutLogPage() {
               <h2 className="text-lg font-semibold">Recovery</h2>
             </div>
             <ul className="space-y-2">
-              {Object.entries(result.recovery).map(([key, val]) => (
-                <li key={key} className="text-sm text-muted-foreground">
-                  <span className="capitalize font-medium text-foreground">{key}:</span> {val as string}
+              {analysis.recovery.rest_48h.length > 0 && (
+                <li className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">48h rest:</span> {analysis.recovery.rest_48h.join(", ")}
                 </li>
-              ))}
+              )}
+              {analysis.recovery.rest_72h.length > 0 && (
+                <li className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">72h rest:</span> {analysis.recovery.rest_72h.join(", ")}
+                </li>
+              )}
+              {analysis.recovery.nutrition_tip && (
+                <li className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Nutrition:</span> {analysis.recovery.nutrition_tip}
+                </li>
+              )}
+              {analysis.recovery.sleep_note && (
+                <li className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Sleep:</span> {analysis.recovery.sleep_note}
+                </li>
+              )}
             </ul>
           </Card>
         </div>

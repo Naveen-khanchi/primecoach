@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
-from typing import Any, Optional
+from typing import Optional
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User, UserProfile
@@ -10,9 +11,13 @@ from app.services.session_service import save_session
 router = APIRouter()
 
 
+class WorkoutAnalyzeRequest(BaseModel):
+    workout_input: str
+
+
 @router.post("/analyze")
 def analyze(
-    workout_input: Any,
+    body: WorkoutAnalyzeRequest,
     user_id: Optional[int] = Query(None, description="User ID to personalize the analysis"),
     db: Session = Depends(get_db)
 ):
@@ -26,7 +31,7 @@ def analyze(
         profile = db.query(UserProfile).filter(UserProfile.user_id == user_id).first()
 
     try:
-        normalized = normalize_workout_input(workout_input)
+        normalized = normalize_workout_input(body.workout_input)
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Could not parse workout input: {str(e)}")
 
