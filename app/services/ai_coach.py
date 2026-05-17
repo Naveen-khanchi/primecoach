@@ -206,7 +206,8 @@ def analyze_workout(workout: NormalizedWorkout, user=None):
                 },
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.4
+            temperature=0.4,
+            max_tokens=4096
         )
     except AuthenticationError:
         raise HTTPException(status_code=500, detail="Groq API key is invalid or missing")

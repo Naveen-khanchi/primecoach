@@ -43,7 +43,7 @@ export function getProfile(userId: number) {
 }
 
 // Workout Analysis
-export function analyzeWorkout(input: string, userId: number) {
+export function analyzeWorkout(userId: number, input: string) {
   return api.post(`/workout/analyze?user_id=${userId}`, { workout_input: input });
 }
 
