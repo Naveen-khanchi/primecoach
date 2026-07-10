@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Dumbbell } from "lucide-react";
 import SignupIllustration from "@/components/shared/signup-illustration";
-import { login } from "@/lib/api";
+import { login, getProfile } from "@/lib/api";
 import axios from "axios";
 
 export default function LoginPage() {
@@ -48,7 +48,13 @@ export default function LoginPage() {
         password: form.password
       });
       localStorage.setItem("userId", res.data.id);
-      router.push("/dashboard")
+      // Check if profile exists — if not, send to onboarding
+      try {
+        await getProfile(res.data.id);
+        router.push("/dashboard");
+      } catch {
+        router.push("/onboarding");
+      }
     } catch(err){
       if (axios.isAxiosError(err) && err.response?.data?.detail) {
         setError(err.response.data.detail);

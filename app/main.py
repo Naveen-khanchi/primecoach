@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 from app.models import user, exercise, session  # noqa: F401 — imports register models with Base
-from app.routes import workout, exercises, sessions, users, progress, recommendations
+from app.routes import workout, exercises, sessions, users, progress, recommendations, health
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,3 +25,4 @@ app.include_router(exercises.router, prefix="/exercises", tags=["Exercises"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
 app.include_router(progress.router, prefix="/progress", tags=["Progress"])
 app.include_router(recommendations.router, prefix="/recommendations", tags=["Recommendations"])
+app.include_router(health.router, prefix="/health", tags=["Health"])
