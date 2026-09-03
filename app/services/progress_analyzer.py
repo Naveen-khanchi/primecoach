@@ -67,7 +67,7 @@ def analyze_progress(user, strength: dict, volume: dict, consistency: dict) -> d
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
                 {
                     "role": "system",

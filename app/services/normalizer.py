@@ -82,7 +82,7 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
 
     try:
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[
                 {"role": "system", "content": "You are a precise fitness data extraction assistant. You extract and structure workout data exactly as instructed. You output only valid JSON with no markdown, no commentary, and no invented data."},
                 {"role": "user", "content": prompt}
