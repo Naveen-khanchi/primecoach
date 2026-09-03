@@ -26,7 +26,16 @@ def get_progress(user_id: int, db: Session = Depends(get_db)):
     strength = get_strength_progression(user_id, db)
     volume = get_volume_trends(user_id, db)
     consistency = get_consistency(user_id, db)
-    ai_insights = analyze_progress(profile, strength, volume, consistency)
+
+    # Raw metrics above are pure DB queries — always return them even if the
+    # AI call below fails, so an AI outage never takes down the whole report.
+    # Broad except is intentional: AI insights are optional here, and Groq can
+    # fail in ways progress_analyzer.py doesn't explicitly catch (e.g. a
+    # decommissioned model raising a raw BadRequestError).
+    try:
+        ai_insights = analyze_progress(profile, strength, volume, consistency)
+    except Exception:
+        ai_insights = None
 
     return {
         "period": f"all time ({consistency['total_sessions']} sessions)",

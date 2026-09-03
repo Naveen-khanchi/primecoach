@@ -35,13 +35,25 @@ PrimeCoach is a FastAPI backend for AI-powered personal fitness coaching. It tak
 5. `services/session_service.py` saves session + exercises to DB (skipped if no `user_id`)
 6. Returns `user`, `session_id`, `normalized_input`, and full `analysis` JSON
 
-### `POST /users`
-1. Receives `UserCreate` (profile + strength baselines)
-2. Saves to `users` table via SQLAlchemy
-3. Returns `UserResponse` with assigned `id`
+### `POST /users/signup`
+1. Receives `UserSignup` (name, email, phone, password)
+2. Hashes password with SHA-256, saves to `users` table (auth only — no fitness data)
+3. Returns `UserAuthResponse` with assigned `id`
+
+### `POST /users/login`
+Looks up `users` by email, compares SHA-256 hash. 401 if no match.
 
 ### `GET /users/{user_id}`
-Fetches user profile from `users` table. 404 if not found.
+Fetches user + profile (`UserFullResponse`, includes nested `profile`). 404 if not found.
+
+### `POST /users/{user_id}/profile`
+Upserts the `user_profiles` row for this user (age, weight, goals, strength baselines, etc). Creates it if missing, updates fields present in the request otherwise.
+
+### `GET /users/{user_id}/profile`
+Fetches the `user_profiles` row for this user. 404 if not found.
+
+### `GET /health/ping`
+Runs a trivial `SELECT 1` against the DB. Exists purely as an external keepalive target (UptimeRobot pings it every 5 min) so the Supabase free-tier project doesn't pause after 7 days of inactivity, and so the Render free-tier backend doesn't spin down from idling.
 
 ### `GET /exercises`
 Queries the `exercises` DB table (auto-populated via upsert when users log workouts). Supports optional filters: `muscle`, `difficulty`, `movement_pattern`. Returns matching exercises.
@@ -79,11 +91,12 @@ Full week plan — day-by-day breakdown with exercises, sets, reps, weight guida
 
 ### Routes (one file per feature)
 - `app/routes/workout.py` — `POST /workout/analyze`
-- `app/routes/users.py` — `POST /users`, `GET /users/{user_id}`
+- `app/routes/users.py` — `POST /users/signup`, `POST /users/login`, `GET /users/{user_id}`, `POST /users/{user_id}/profile`, `GET /users/{user_id}/profile`
 - `app/routes/exercises.py` — `GET /exercises` (queries DB exercises table, supports muscle/difficulty/movement_pattern filters)
 - `app/routes/sessions.py` — `GET /sessions/{user_id}`, `GET /sessions/{user_id}/{session_id}`
 - `app/routes/progress.py` — `GET /progress/{user_id}`, `/strength`, `/volume`, `/consistency`
 - `app/routes/recommendations.py` — `GET /recommendations/{user_id}/next-session`, `/weekly-plan`
+- `app/routes/health.py` — `GET /health/ping` (external keepalive target, not app functionality)
 
 ### Services (all business logic)
 - `app/services/normalizer.py` — Groq call to parse any workout input → `NormalizedWorkout`
@@ -95,32 +108,46 @@ Full week plan — day-by-day breakdown with exercises, sets, reps, weight guida
 - `app/services/recommendation_engine.py` — Groq calls for next session recommendation and weekly plan
 
 ### Models (SQLAlchemy ORM)
-- `app/models/user.py` — `users` table
+- `app/models/user.py` — `User` (`users` table, auth only) + `UserProfile` (`user_profiles` table, fitness data), one-to-one via `user_id` FK
 - `app/models/exercise.py` — `exercises` table (canonical exercise registry, grows via upsert)
 - `app/models/session.py` — `workout_sessions` + `session_exercises` tables
 - `app/models/__init__.py` — imports all models so `Base.metadata.create_all()` registers all tables
 
 ### Schemas (Pydantic)
 - `app/schemas/session_schema.py` — `NormalizedExercise`, `NormalizedWorkout`, session models
-- `app/schemas/user_schema.py` — `UserCreate`, `UserResponse`
+- `app/schemas/user_schema.py` — `UserSignup`, `UserLogin`, `UserAuthResponse`, `ProfileCreate`, `ProfileResponse`, `UserFullResponse` (nests `profile`)
 
 ### Database
-- `app/database.py` — SQLite engine, `SessionLocal`, `Base`, `get_db()` dependency
-- `primecoach.db` — SQLite file (gitignored)
+- `app/database.py` — SQLAlchemy engine built from `DATABASE_URL` env var (Postgres in production — Supabase; falls back to a local Postgres URL if unset). Also supports SQLite (`connect_args` branch) for quick local runs. Exposes `SessionLocal`, `Base`, `get_db()` dependency.
+- Production DB is hosted on Supabase (free tier). `GET /health/ping` + an UptimeRobot monitor exist solely to keep it from pausing due to inactivity — see Known Issues below.
 
 ---
 
 ## Database Schema (current)
 
 ### `users`
+Auth only — no fitness data lives here anymore (see `user_profiles` below).
+
 | Column | Type | Notes |
 |---|---|---|
 | id | INTEGER PK | |
 | name | TEXT | |
-| age | INTEGER | |
-| weight_kg | FLOAT | |
-| height_cm | FLOAT | |
-| gender | TEXT | |
+| email | TEXT | unique |
+| phone | TEXT | nullable |
+| password_hash | TEXT | SHA-256 |
+| created_at | DATETIME | |
+
+### `user_profiles`
+One-to-one with `users` via `user_id` FK. Created/updated via upsert on `POST /users/{user_id}/profile`.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | INTEGER PK | |
+| user_id | INTEGER FK → users.id | unique |
+| age | INTEGER | nullable |
+| weight_kg | FLOAT | nullable |
+| height_cm | FLOAT | nullable |
+| gender | TEXT | nullable |
 | fitness_level | TEXT | beginner / intermediate / advanced |
 | goal | TEXT | muscle_gain / fat_loss / strength / endurance / general_fitness |
 | days_available | INTEGER | days per week |
@@ -131,7 +158,6 @@ Full week plan — day-by-day breakdown with exercises, sets, reps, weight guida
 | deadlift_kg | FLOAT | nullable |
 | overhead_press_kg | FLOAT | nullable |
 | pull_ups_max_reps | INTEGER | nullable |
-| created_at | DATETIME | |
 
 ---
 
@@ -230,6 +256,9 @@ All services handle Groq errors consistently: `AuthenticationError` → 500, `Ra
 ---
 
 ## Known Issues / Upcoming (Phase 7)
-- `PUT /users/{user_id}` (update profile) not yet implemented
+- `PUT /users/{user_id}` (update name/email/phone) not yet implemented — only the fitness profile has an upsert route (`POST /users/{user_id}/profile`)
 - `GET /users/{user_id}/onboarding-status` (profile completeness check) not yet implemented
 - Guided user onboarding flow not yet implemented
+
+## Operational Notes
+- Supabase (free tier) pauses the DB project after ~7 days of inactivity — not a usage-quota issue, purely an inactivity timeout that recurs every time it goes idle again. Mitigated with `GET /health/ping` (trivial `SELECT 1`) + an UptimeRobot HTTP monitor pinging it every 5 min, which also keeps the Render free-tier backend from spinning down.

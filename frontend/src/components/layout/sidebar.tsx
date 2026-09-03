@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Dumbbell,
   LayoutDashboard,
@@ -20,16 +20,22 @@ import { useState } from "react";
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, disabled: false },
   { href: "/workout/log", label: "Log Workout", icon: ClipboardPen, disabled: false },
-  { href: "/workout/history", label: "Sessions", icon: History, disabled: true },
-  { href: "/progress", label: "Progress", icon: TrendingUp, disabled: true },
+  { href: "/workout/history", label: "Sessions", icon: History, disabled: false },
+  { href: "/progress", label: "Progress", icon: TrendingUp, disabled: false },
   { href: "/recommendations/next-session", label: "Recommendations", icon: Brain, disabled: true },
-  { href: "/exercises", label: "Exercises", icon: Library, disabled: true },
+  { href: "/exercises", label: "Exercises", icon: Library, disabled: false },
   { href: "/profile", label: "Profile", icon: User, disabled: false },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+
+  function handleLogout() {
+    localStorage.removeItem("userId");
+    router.replace("/login");
+  }
 
   return (
     <>
@@ -113,7 +119,11 @@ export default function Sidebar() {
               </div>
               <span className="text-sm font-medium">User</span>
             </div>
-            <button className="text-muted-foreground hover:text-foreground transition-colors">
+            <button
+              onClick={handleLogout}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="Log out"
+            >
               <LogOut className="size-4" />
             </button>
           </div>

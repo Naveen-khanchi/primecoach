@@ -76,24 +76,30 @@ def get_volume_trends(user_id: int, db: Session) -> dict:
     rows = (
         db.query(
             SessionExercise.primary_muscle,
-            func.strftime("%Y-W%W", WorkoutSession.created_at).label("week"),
-            func.sum(SessionExercise.volume_kg).label("volume_kg"),
+            SessionExercise.volume_kg,
+            WorkoutSession.created_at,
         )
         .join(WorkoutSession, SessionExercise.session_id == WorkoutSession.id)
         .filter(WorkoutSession.user_id == user_id)
         .filter(SessionExercise.primary_muscle.isnot(None))
         .filter(SessionExercise.volume_kg.isnot(None))
-        .group_by(SessionExercise.primary_muscle, "week")
-        .order_by(SessionExercise.primary_muscle, "week")
         .all()
     )
 
-    # Group by muscle
-    by_muscle: dict[str, list] = {}
+    # Group by muscle + week in Python, not SQL — func.strftime() is SQLite-only
+    # and raises UndefinedFunction on Postgres. get_consistency() below already
+    # does date bucketing this way; mirror it here for the same portability.
+    weekly_totals: dict[tuple[str, str], float] = {}
     for row in rows:
-        by_muscle.setdefault(row.primary_muscle, []).append({
-            "week": row.week,
-            "volume_kg": round(row.volume_kg, 2),
+        week = row.created_at.strftime("%Y-W%W")
+        key = (row.primary_muscle, week)
+        weekly_totals[key] = weekly_totals.get(key, 0) + row.volume_kg
+
+    by_muscle: dict[str, list] = {}
+    for muscle, week in sorted(weekly_totals.keys()):
+        by_muscle.setdefault(muscle, []).append({
+            "week": week,
+            "volume_kg": round(weekly_totals[(muscle, week)], 2),
         })
 
     # Get total session count to detect overtrained muscles

@@ -41,7 +41,7 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
                 "notes": "<RPE, tempo, form notes, or any extra detail — or null>"
             }}
         ],
-        "workout_type": "<Push / Pull / Legs / Upper Body / Lower Body / Full Body / Cardio / Mobility / null>",
+        "workout_type": "<a short label describing the session — these are illustrative, NOT a fixed list to pick from: 'Chest', 'Shoulders', 'Chest & Triceps', 'Back & Biceps', 'Push', 'Pull', 'Legs', 'Upper Body', 'Full Body', 'Cardio', 'Endurance', 'Strength Training', 'Mobility', or null>",
         "duration_minutes": <integer or null>,
         "notes": "<overall session notes: how the user felt, energy level, injuries, PRs, etc. — or null>"
     }}
@@ -51,12 +51,17 @@ def normalize_workout_input(raw_input) -> NormalizedWorkout:
     - Shorthand like "3x10" means sets=3, reps="10"
     - If reps is a single number, store as string: 10 → "10"
     - Convert lbs to kg: multiply by 0.453592, round to 1 decimal place
-    - If workout_type is not stated, infer it from the exercises:
-        Push exercises (bench, press, dips, triceps) → "Push"
-        Pull exercises (rows, pulldowns, curls, deadlifts) → "Pull"
-        Leg exercises (squats, lunges, leg press, RDL) → "Legs"
-        Mix of push + pull → "Upper Body"
-        Mix of upper + lower → "Full Body"
+    - workout_type: prefer how a lifter would actually describe the session over a rigid category. There is no fixed enum — pick whatever label a real lifter would use, don't force-fit one of the examples below.
+        - If the user states the type themselves (even casually, e.g. "chest and triceps day", "just did shoulders", "endurance work"), use their own wording, title-cased.
+        - Otherwise, infer it from the primary_muscle values across the exercises:
+            1 dominant muscle group → name that muscle alone, e.g. "Chest", "Back", "Shoulders" — do NOT pad it into a pair
+            2 dominant muscle groups → name both, e.g. "Chest & Triceps", "Back & Biceps"
+            3+ muscle groups with no clear focus, following a push/pull/squat movement-pattern split → "Push" / "Pull" / "Legs"
+            Mix of push + pull movements → "Upper Body"
+            Mix of upper + lower body → "Full Body"
+            High-rep/low-rest work aimed at muscular or cardiovascular endurance rather than max strength → "Endurance"
+            Primarily running/cycling/rowing-style conditioning, no resistance work → "Cardio"
+            Stretching/activation only → "Mobility"
     - primary_muscle: the single most targeted muscle for that exercise (e.g. Bench Press → "chest", Squat → "quads", RDL → "hamstrings")
     - movement_pattern: the fundamental movement the exercise belongs to:
         Bench Press, Overhead Press, Dips, Push Ups → "push"
