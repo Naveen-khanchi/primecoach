@@ -146,8 +146,8 @@ function StrengthChart() {
       <svg width="100%" height="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id="strengthFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="currentColor" stopOpacity="0.16" className="text-green-600" />
-            <stop offset="100%" stopColor="currentColor" stopOpacity="0" className="text-green-600" />
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.16" className="text-brand" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0" className="text-brand" />
           </linearGradient>
         </defs>
         {[68, 72, 76, 80, 84].map((v) => (
@@ -157,7 +157,7 @@ function StrengthChart() {
         <polyline
           points={linePts}
           fill="none"
-          className="stroke-green-600"
+          className="stroke-brand"
           strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -188,7 +188,7 @@ function StrengthChart() {
         </span>
       ))}
       <div
-        className="absolute size-2.5 rounded-full bg-green-600 -translate-x-1/2 -translate-y-1/2"
+        className="absolute size-2.5 rounded-full bg-brand -translate-x-1/2 -translate-y-1/2"
         style={{ left: `${(x(n - 1) / W) * 100}%`, top: `${(y(STRENGTH_DATA[n - 1]) / H) * 100}%` }}
       />
 
@@ -266,7 +266,7 @@ export default function LandingPage() {
               <Link href="/login" onClick={() => setMenuOpen(false)}>Login</Link>
             </nav>
             <Link href="/signup" className="mt-8" onClick={() => setMenuOpen(false)}>
-              <Button size="lg" className="w-full gap-2">
+              <Button size="lg" className="w-full gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-base">
                 Start Training <ArrowRight className="size-4" />
               </Button>
             </Link>
@@ -278,7 +278,7 @@ export default function LandingPage() {
       <section className="px-6 py-10 md:px-12 md:py-20 grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] lg:grid-rows-2 gap-8 lg:gap-x-14 lg:gap-y-4 items-center max-w-6xl mx-auto w-full">
         <div className="lg:col-start-1 lg:row-start-1">
           <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-5">
-            <span className="size-1.5 rounded-full bg-green-600" />
+            <span className="size-1.5 rounded-full bg-brand" />
             Built from your actual training data
           </div>
           <h1 className="text-[2.5rem] md:text-6xl font-extrabold tracking-tight leading-[1.05] max-w-xl text-balance">
@@ -310,7 +310,7 @@ export default function LandingPage() {
             <div className="text-sm font-medium py-1">Bench Press</div>
             <div className="flex items-center justify-between text-sm text-muted-foreground py-1 font-mono">
               80kg × 8
-              <span className="inline-flex items-center gap-1 text-green-600 font-sans font-semibold text-xs">
+              <span className="inline-flex items-center gap-1 text-brand font-sans font-semibold text-xs">
                 <ArrowUp className="size-3" />PR pace
               </span>
             </div>
@@ -337,7 +337,7 @@ export default function LandingPage() {
         <div ref={heroCtaRef} className="lg:col-start-1 lg:row-start-2 self-start">
           <div className="flex items-center gap-5 flex-wrap">
             <Link href="/signup">
-              <Button size="lg" className="gap-2 h-11 px-6">
+              <Button size="lg" className="gap-2 h-11 px-6 bg-brand text-brand-foreground hover:bg-brand/90 text-base">
                 Start Training <ArrowRight className="size-4" />
               </Button>
             </Link>
@@ -363,7 +363,7 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-14 items-stretch">
           <div>
             <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">
-              <span className="size-1.5 rounded-full bg-green-600" />
+              <span className="size-1.5 rounded-full bg-brand" />
               Progress, proven
             </div>
             <h2 className="text-4xl font-bold tracking-tight max-w-[14ch] text-balance">
@@ -390,7 +390,7 @@ export default function LandingPage() {
                 <p className="font-semibold text-sm">Bench Press</p>
                 <p className="text-sm text-muted-foreground mt-0.5">Working weight, last 12 sessions</p>
               </div>
-              <span className="inline-flex items-center gap-1 text-green-600 font-semibold text-sm">
+              <span className="inline-flex items-center gap-1 text-brand font-semibold text-sm">
                 <ArrowUp className="size-3.5" />+12.5kg
               </span>
             </div>
@@ -400,54 +400,56 @@ export default function LandingPage() {
       </section>
 
       {/* Real Example */}
-      <section className="px-6 py-8 md:px-12">
-        <div className="max-w-2xl mx-auto">
+      <section className="px-6 py-12 md:py-16 md:px-12">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-4xl font-bold tracking-tight text-balance">Just log your workout like you normally do.</h2>
             <p className="mt-3 text-muted-foreground">Type in any format. PrimeCoach understands it.</p>
           </div>
 
-          <div className="relative bg-zinc-900 text-zinc-100 rounded-2xl p-6 font-mono text-sm leading-relaxed">
-            <span className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-3">
-              Your input
-            </span>
-            <pre className="whitespace-pre-wrap font-mono">{`chest today
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-stretch">
+            <div className="relative bg-zinc-900 text-zinc-100 rounded-2xl p-6 font-mono text-sm leading-relaxed">
+              <span className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-500 mb-3">
+                Your input
+              </span>
+              <pre className="whitespace-pre-wrap font-mono">{`chest today
 
 bench 80x8 80x7 75x10
 incline db 30x10 30x9
 cable fly 15x12 15x10
 
 felt strong today 💪`}</pre>
-            <div className="absolute right-5 bottom-5 size-9 rounded-full bg-green-600 flex items-center justify-center">
-              <ArrowRight className="size-4 text-zinc-900" />
+              <div className="absolute right-5 bottom-5 size-9 rounded-full bg-brand flex items-center justify-center">
+                <ArrowRight className="size-4 text-zinc-900" />
+              </div>
             </div>
-          </div>
 
-          <Card className="mt-4 p-6">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">AI Analysis</p>
-            <div className="divide-y">
-              {analysisRows.map((row) => (
-                <div key={row.title} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-                  <div
-                    className={`flex items-center justify-center size-8 rounded-lg shrink-0 ${
-                      row.tone === "good" ? "bg-green-500/10 text-green-600" : "bg-amber-500/10 text-amber-600"
-                    }`}
-                  >
-                    <row.icon className="size-4" />
+            <Card className="p-6">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">AI Analysis</p>
+              <div className="divide-y">
+                {analysisRows.map((row) => (
+                  <div key={row.title} className="flex gap-3 py-3 first:pt-0 last:pb-0">
+                    <div
+                      className={`flex items-center justify-center size-8 rounded-lg shrink-0 ${
+                        row.tone === "good" ? "bg-brand/10 text-brand" : "bg-amber-500/10 text-amber-600"
+                      }`}
+                    >
+                      <row.icon className="size-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold">{row.title}</h4>
+                      <p className="text-sm text-muted-foreground mt-0.5">{row.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="text-sm font-semibold">{row.title}</h4>
-                    <p className="text-sm text-muted-foreground mt-0.5">{row.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+                ))}
+              </div>
+            </Card>
+          </div>
         </div>
       </section>
 
       {/* Features */}
-      <section className="px-6 py-8 md:px-12" id="features">
+      <section className="px-6 py-12 md:py-16 md:px-12" id="features">
         <div className="max-w-5xl mx-auto rounded-[2rem] bg-muted ring-1 ring-foreground/10 p-8 md:p-14">
           <div className="max-w-lg mx-auto text-center mb-12">
             <h2 className="text-4xl font-bold tracking-tight">A coach that understands how you train</h2>
@@ -555,7 +557,7 @@ felt strong today 💪`}</pre>
         }`}
       >
         <Link href="/signup">
-          <Button size="lg" className="w-full gap-2">
+          <Button size="lg" className="w-full gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-base">
             Start Training <ArrowRight className="size-4" />
           </Button>
         </Link>
