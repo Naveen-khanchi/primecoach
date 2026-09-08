@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PrimeCoach — AI-Powered Fitness Coaching",
+  title: "PrimeCoach - AI-Powered Fitness Coaching",
   description: "Get personalized workout analysis, progress tracking, and AI-powered recommendations tailored to your goals.",
 };
 
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased scroll-smooth`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

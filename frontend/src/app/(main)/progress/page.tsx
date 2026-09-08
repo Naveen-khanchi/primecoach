@@ -51,7 +51,7 @@ export default function ProgressPage() {
         const res = await getProgress(uid);
         setProgress(res.data);
       } catch {
-        setError("Couldn't load progress data — check that the backend is running and reachable, and that a profile exists for this user.");
+        setError("Couldn't load progress data - check that the backend is running and reachable, and that a profile exists for this user.");
       } finally {
         setLoading(false);
       }
@@ -138,7 +138,7 @@ export default function ProgressPage() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              No scored sessions yet — log a workout to start tracking trend.
+              No scored sessions yet - log a workout to start tracking trend.
             </div>
           )}
         </div>
@@ -196,7 +196,7 @@ export default function ProgressPage() {
       {!insights ? (
         <Card className="p-6 flex items-center gap-3 text-sm text-muted-foreground">
           <AlertTriangle className="size-4 shrink-0" />
-          AI insights are unavailable right now — showing your raw progress data instead. Try refreshing later.
+          AI insights are unavailable right now - showing your raw progress data instead. Try refreshing later.
         </Card>
       ) : (
         <Card className="p-6">
@@ -259,7 +259,7 @@ export default function ProgressPage() {
           <p className="text-sm text-muted-foreground mt-1">Sessions per week</p>
         </Card>
         <Card className="p-5">
-          <p className="text-2xl font-bold tabular-nums">{progress.consistency.weeks_tracked ?? "—"}</p>
+          <p className="text-2xl font-bold tabular-nums">{progress.consistency.weeks_tracked ?? "-"}</p>
           <p className="text-sm text-muted-foreground mt-1">Weeks tracked</p>
         </Card>
         <Card className="p-5">
@@ -278,7 +278,7 @@ export default function ProgressPage() {
         <h2 className="text-lg font-semibold mb-3">Volume by Muscle</h2>
         <Card className="p-6">
           {volumeByMuscle.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No volume data yet — log some workouts first.</p>
+            <p className="text-sm text-muted-foreground">No volume data yet - log some workouts first.</p>
           ) : (
             <>
               <div className="space-y-3">
@@ -304,11 +304,11 @@ export default function ProgressPage() {
               <div className="flex gap-5 mt-5 pt-4 border-t text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-amber-500" />
-                  Overtrained — hit every session
+                  Overtrained - hit every session
                 </span>
                 <span className="flex items-center gap-1.5">
                   <span className="size-1.5 rounded-full bg-red-500" />
-                  Neglected — 14+ days since last trained
+                  Neglected - 14+ days since last trained
                 </span>
               </div>
             </>

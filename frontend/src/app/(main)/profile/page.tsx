@@ -12,7 +12,7 @@ import {
 import { getUser, getProfile } from "@/lib/api";
 
 function fmt(value: string | null | undefined) {
-  if (!value) return "—";
+  if (!value) return "-";
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
@@ -20,7 +20,7 @@ function InfoRow({ label, value }: { label: string; value: string | number | nul
   return (
     <div className="flex justify-between py-2">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium">{value ?? "—"}</span>
+      <span className="text-sm font-medium">{value ?? "-"}</span>
     </div>
   );
 }
@@ -85,7 +85,7 @@ export default function ProfilePage() {
               </span>
             </div>
             <div className="text-center">
-              <p className="text-lg font-semibold">{user?.name ?? "—"}</p>
+              <p className="text-lg font-semibold">{user?.name ?? "-"}</p>
               <p className="text-sm text-muted-foreground">
                 {fmt(profile?.goal)} &bull; {fmt(profile?.fitness_level)}
               </p>
@@ -96,7 +96,7 @@ export default function ProfilePage() {
           <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Age</span>
-              <span className="text-lg font-semibold">{profile?.age ?? "—"}</span>
+              <span className="text-lg font-semibold">{profile?.age ?? "-"}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Gender</span>
@@ -104,11 +104,11 @@ export default function ProfilePage() {
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Weight</span>
-              <span className="text-lg font-semibold">{profile?.weight_kg ? `${profile.weight_kg} kg` : "—"}</span>
+              <span className="text-lg font-semibold">{profile?.weight_kg ? `${profile.weight_kg} kg` : "-"}</span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Height</span>
-              <span className="text-lg font-semibold">{profile?.height_cm ? `${profile.height_cm} cm` : "—"}</span>
+              <span className="text-lg font-semibold">{profile?.height_cm ? `${profile.height_cm} cm` : "-"}</span>
             </div>
           </div>
         </div>

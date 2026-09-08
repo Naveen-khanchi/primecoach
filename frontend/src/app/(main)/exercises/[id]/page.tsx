@@ -25,7 +25,7 @@ export default function ExerciseDetailPage() {
       .then((list) => {
         setExercise(list.find((ex) => exerciseSlug(ex) === slug) ?? null);
       })
-      .catch(() => setError("Couldn't load the exercise library — check your internet connection and try again."))
+      .catch(() => setError("Couldn't load the exercise library - check your internet connection and try again."))
       .finally(() => setLoading(false));
   }, [slug]);
 
@@ -76,7 +76,7 @@ export default function ExerciseDetailPage() {
       {images.length > 0 && (
         <div className="grid grid-cols-2 gap-3 max-w-xl">
           {images.map((src, i) => (
-            <ExerciseImage key={src} src={src} alt={`${exercise.name} — step ${i + 1}`} />
+            <ExerciseImage key={src} src={src} alt={`${exercise.name} - step ${i + 1}`} />
           ))}
         </div>
       )}

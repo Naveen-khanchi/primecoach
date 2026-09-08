@@ -246,7 +246,7 @@ export default function OnboardingPage() {
               <CardHeader>
                 <CardTitle className="text-2xl">Strength baseline</CardTitle>
                 <CardDescription>
-                  Optional — helps us track your progress from day one. Skip any you don&apos;t know.
+                  Optional - helps us track your progress from day one. Skip any you don&apos;t know.
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">

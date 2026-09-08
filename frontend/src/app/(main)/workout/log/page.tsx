@@ -47,11 +47,11 @@ const dummyResult = {
   },
   improvements: [
     "Add an overhead press variation to target front delts and improve shoulder strength.",
-    "Increase tricep volume — only one isolation exercise for a push day is insufficient.",
+    "Increase tricep volume - only one isolation exercise for a push day is insufficient.",
     "Consider adding lateral raises for balanced shoulder development.",
   ],
   warnings: [
-    "Anterior deltoid overload risk — all pressing movements hit front delts without rear delt work.",
+    "Anterior deltoid overload risk - all pressing movements hit front delts without rear delt work.",
   ],
   recovery: {
     chest: "Rest 48 hours before next chest session",
@@ -183,7 +183,7 @@ export default function WorkoutLogPage() {
               {analysis.improvements.map((imp: { action: string; benefit: string }, i: number) => (
                 <li key={i} className="text-sm text-muted-foreground flex gap-2">
                   <span className="text-amber-500 font-semibold shrink-0">{i + 1}.</span>
-                  <span><span className="text-foreground font-medium">{imp.action}</span> — {imp.benefit}</span>
+                  <span><span className="text-foreground font-medium">{imp.action}</span> - {imp.benefit}</span>
                 </li>
               ))}
             </ul>
@@ -213,7 +213,7 @@ export default function WorkoutLogPage() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">No warnings — great session!</p>
+              <p className="text-sm text-muted-foreground">No warnings - great session!</p>
             )}
           </Card>
 
@@ -304,7 +304,7 @@ export default function WorkoutLogPage() {
       {/* Examples */}
       <Card className="p-6">
         <h3 className="text-sm font-semibold text-muted-foreground mb-3">
-          Examples — click to use
+          Examples - click to use
         </h3>
         <div className="space-y-2">
           {examples.map((ex, i) => (

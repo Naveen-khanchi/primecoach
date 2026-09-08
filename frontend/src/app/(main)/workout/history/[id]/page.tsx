@@ -33,7 +33,7 @@ export default function SessionDetailPage() {
         const res = await getSessionDetail(uid, sessionId);
         setSession(res.data);
       } catch {
-        setError("Couldn't load this session — check that the backend is running and reachable.");
+        setError("Couldn't load this session - check that the backend is running and reachable.");
       } finally {
         setLoading(false);
       }
@@ -116,7 +116,7 @@ export default function SessionDetailPage() {
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {Object.entries(session.scores).map(([key, value]: [string, any]) => (
           <Card key={key} className="p-4 text-center">
-            <p className={`text-2xl font-bold tabular-nums ${value <= 5 ? "text-red-600" : ""}`}>{value ?? "—"}</p>
+            <p className={`text-2xl font-bold tabular-nums ${value <= 5 ? "text-red-600" : ""}`}>{value ?? "-"}</p>
             <p className="text-xs text-muted-foreground mt-1">{SCORE_LABELS[key] ?? key}</p>
           </Card>
         ))}
@@ -146,10 +146,10 @@ export default function SessionDetailPage() {
                         <p className="text-xs text-muted-foreground capitalize">{ex.primary_muscle}</p>
                       </div>
                       <span className="tabular-nums text-right whitespace-nowrap">
-                        {ex.sets ?? "—"} × {ex.reps ?? "—"}{ex.weight_kg ? ` @ ${ex.weight_kg}kg` : ""}
+                        {ex.sets ?? "-"} × {ex.reps ?? "-"}{ex.weight_kg ? ` @ ${ex.weight_kg}kg` : ""}
                       </span>
                       <span className="tabular-nums text-right text-muted-foreground w-20 shrink-0">
-                        {ex.volume_kg ? `${ex.volume_kg.toLocaleString()} kg` : "—"}
+                        {ex.volume_kg ? `${ex.volume_kg.toLocaleString()} kg` : "-"}
                       </span>
                     </li>
                   ))}
@@ -182,7 +182,7 @@ export default function SessionDetailPage() {
                       <span>
                         {tip.action}
                         {tip.benefit && (
-                          <span className="text-muted-foreground"> — {tip.benefit}</span>
+                          <span className="text-muted-foreground"> - {tip.benefit}</span>
                         )}
                       </span>
                     </li>

@@ -23,7 +23,7 @@ export default function SessionHistoryPage() {
         const res = await getSessions(uid);
         setSessions(res.data);
       } catch {
-        setError("Couldn't load sessions — check that the backend is running and reachable.");
+        setError("Couldn't load sessions - check that the backend is running and reachable.");
       } finally {
         setLoading(false);
       }
@@ -102,7 +102,7 @@ export default function SessionHistoryPage() {
                       <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                         <span className="flex items-center gap-1">
                           <Clock className="size-3" />
-                          {s.duration_minutes ? `${s.duration_minutes} min` : "—"}
+                          {s.duration_minutes ? `${s.duration_minutes} min` : "-"}
                         </span>
                         <span>{s.exercise_count} exercises</span>
                       </div>
@@ -110,13 +110,13 @@ export default function SessionHistoryPage() {
 
                     <div className="text-right hidden sm:block">
                       <p className="text-sm font-medium tabular-nums">
-                        {s.total_volume_kg ? `${s.total_volume_kg.toLocaleString()} kg` : "—"}
+                        {s.total_volume_kg ? `${s.total_volume_kg.toLocaleString()} kg` : "-"}
                       </p>
                       <p className="text-xs text-muted-foreground">volume</p>
                     </div>
 
                     <div className="text-right hidden sm:block">
-                      <p className="text-sm font-medium tabular-nums">{s.total_sets ?? "—"}</p>
+                      <p className="text-sm font-medium tabular-nums">{s.total_sets ?? "-"}</p>
                       <p className="text-xs text-muted-foreground">sets</p>
                     </div>
 
@@ -125,7 +125,7 @@ export default function SessionHistoryPage() {
                         low ? "bg-red-500/10 text-red-600" : "bg-muted text-foreground"
                       }`}
                     >
-                      {s.scores.overall ?? "—"}/10
+                      {s.scores.overall ?? "-"}/10
                     </span>
 
                     <ChevronRight className="size-4 text-muted-foreground shrink-0" />

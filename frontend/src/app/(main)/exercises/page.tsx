@@ -25,7 +25,7 @@ export default function ExercisesPage() {
   useEffect(() => {
     fetchExerciseLibrary()
       .then(setExercises)
-      .catch(() => setError("Couldn't load the exercise library — check your internet connection and try again."))
+      .catch(() => setError("Couldn't load the exercise library - check your internet connection and try again."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -128,7 +128,7 @@ export default function ExercisesPage() {
           </Card>
           {filtered.length > PAGE_SIZE && (
             <p className="text-center text-sm text-muted-foreground">
-              Showing {PAGE_SIZE} of {filtered.length.toLocaleString()} — narrow your search to see more.
+              Showing {PAGE_SIZE} of {filtered.length.toLocaleString()} - narrow your search to see more.
             </p>
           )}
         </>

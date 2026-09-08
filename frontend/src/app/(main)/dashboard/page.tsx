@@ -81,7 +81,7 @@ export default function DashboardPage() {
   // Compute avg score from sessions list
   const avgScore = sessions.length
     ? (sessions.reduce((sum, s) => sum + (s.scores.overall ?? 0), 0) / sessions.length).toFixed(1)
-    : "—";
+    : "-";
 
   // Build volume chart data — sum all muscles per week
   const chartData = volume?.weekly_volume
@@ -112,8 +112,8 @@ export default function DashboardPage() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={CalendarCheck} label="Total Sessions" value={consistency?.total_sessions ?? sessions.length} />
-        <StatCard icon={Target} label="Sessions / Week" value={consistency?.sessions_per_week_avg?.toFixed(1) ?? "—"} />
-        <StatCard icon={Flame} label="Weeks Tracked" value={consistency?.weeks_tracked ?? "—"} />
+        <StatCard icon={Target} label="Sessions / Week" value={consistency?.sessions_per_week_avg?.toFixed(1) ?? "-"} />
+        <StatCard icon={Flame} label="Weeks Tracked" value={consistency?.weeks_tracked ?? "-"} />
         <StatCard icon={Trophy} label="Average Score" value={avgScore} />
       </div>
 
@@ -161,9 +161,9 @@ export default function DashboardPage() {
                   </div>
                   <div className="text-right flex items-center gap-3">
                     <div>
-                      <p className="text-sm font-medium">Score: {s.scores.overall ?? "—"}</p>
+                      <p className="text-sm font-medium">Score: {s.scores.overall ?? "-"}</p>
                       <p className="text-xs text-muted-foreground">
-                        {s.total_volume_kg ? `${s.total_volume_kg.toLocaleString()} kg` : "—"}
+                        {s.total_volume_kg ? `${s.total_volume_kg.toLocaleString()} kg` : "-"}
                       </p>
                     </div>
                     <ChevronRight className="size-4 text-muted-foreground" />
@@ -198,7 +198,7 @@ export default function DashboardPage() {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              No volume data yet — log some workouts first.
+              No volume data yet - log some workouts first.
             </div>
           )}
         </div>
