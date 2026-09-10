@@ -3,14 +3,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.user import User
+from app.auth import get_current_user
 from app.models.session import WorkoutSession, SessionExercise
 
 router = APIRouter()
 
 
 @router.get("/{user_id}")
-def get_sessions(user_id: int, db: Session = Depends(get_db)):
+def get_sessions(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """List all sessions for a user — summary only, no full AI analysis."""
+
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -44,8 +49,12 @@ def get_sessions(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}/{session_id}")
-def get_session(user_id: int, session_id: int, db: Session = Depends(get_db)):
+def get_session(user_id: int, session_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Get a single session with full exercise list and stored AI analysis."""
+
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
+    
     session = (
         db.query(WorkoutSession)
         .filter(WorkoutSession.id == session_id, WorkoutSession.user_id == user_id)

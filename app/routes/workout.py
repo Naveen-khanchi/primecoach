@@ -7,6 +7,7 @@ from app.models.user import User, UserProfile
 from app.services.normalizer import normalize_workout_input
 from app.services.ai_coach import analyze_workout
 from app.services.session_service import save_session
+from app.auth import get_current_user_optional
 
 router = APIRouter()
 
@@ -19,11 +20,14 @@ class WorkoutAnalyzeRequest(BaseModel):
 def analyze(
     body: WorkoutAnalyzeRequest,
     user_id: Optional[int] = Query(None, description="User ID to personalize the analysis"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional),
 ):
     profile = None
     user_name = None
     if user_id:
+        if current_user is None or user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
         user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=404, detail=f"User with id {user_id} not found")

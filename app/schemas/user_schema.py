@@ -23,6 +23,7 @@ class UserAuthResponse(BaseModel):
     email: str
     phone: Optional[str] = None
     created_at: datetime
+    access_token: str = ""
 
     class Config:
         from_attributes = True
@@ -78,6 +79,7 @@ class UserFullResponse(BaseModel):
     phone: Optional[str] = None
     created_at: datetime
     profile: Optional[ProfileResponse] = None
+    access_token: str = ""
 
     class Config:
         from_attributes = True

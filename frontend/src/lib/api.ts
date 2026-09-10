@@ -4,6 +4,26 @@ const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || "https://primecoach.onrender.com",
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("userId");
+      localStorage.removeItem("token");
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Auth
 export function signup(data: { name: string; email: string; phone?: string; password: string }) {
   return api.post("/users/signup", data);

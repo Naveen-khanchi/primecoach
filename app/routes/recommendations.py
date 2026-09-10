@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user
 from app.models.user import User, UserProfile
 from app.services.recommendation_service import get_next_session_context, get_weekly_plan_context
 from app.services.recommendation_engine import recommend_next_session, recommend_weekly_plan
@@ -8,7 +9,9 @@ from app.services.recommendation_engine import recommend_next_session, recommend
 router = APIRouter()
 
 
-def _get_profile_or_404(user_id: int, db: Session) -> UserProfile:
+def _get_profile_or_404(user_id: int, db: Session, current_user) -> UserProfile:
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -19,16 +22,16 @@ def _get_profile_or_404(user_id: int, db: Session) -> UserProfile:
 
 
 @router.get("/{user_id}/next-session")
-def next_session(user_id: int, db: Session = Depends(get_db)):
+def next_session(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Recommend the next workout session based on recent training history."""
-    profile = _get_profile_or_404(user_id, db)
+    profile = _get_profile_or_404(user_id, db, current_user)
     context = get_next_session_context(user_id, db)
     return recommend_next_session(profile, context)
 
 
 @router.get("/{user_id}/weekly-plan")
-def weekly_plan(user_id: int, db: Session = Depends(get_db)):
+def weekly_plan(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Generate a full week training plan based on user profile and recent history."""
-    profile = _get_profile_or_404(user_id, db)
+    profile = _get_profile_or_404(user_id, db, current_user)
     context = get_weekly_plan_context(user_id, db)
     return recommend_weekly_plan(profile, context)

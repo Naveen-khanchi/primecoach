@@ -34,6 +34,7 @@ export default function Sidebar() {
 
   function handleLogout() {
     localStorage.removeItem("userId");
+    localStorage.removeItem("token");
     router.replace("/login");
   }
 

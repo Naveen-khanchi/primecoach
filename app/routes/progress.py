@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
+from app.auth import get_current_user
 from app.models.user import User, UserProfile
 from app.services.progress_service import get_strength_progression, get_volume_trends, get_consistency
 from app.services.progress_analyzer import analyze_progress
@@ -8,7 +9,10 @@ from app.services.progress_analyzer import analyze_progress
 router = APIRouter()
 
 
-def _get_profile_or_404(user_id: int, db: Session) -> UserProfile:
+def _get_profile_or_404(user_id: int, db: Session, current_user) -> UserProfile:
+
+    if user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to access this user's data")
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -19,9 +23,9 @@ def _get_profile_or_404(user_id: int, db: Session) -> UserProfile:
 
 
 @router.get("/{user_id}")
-def get_progress(user_id: int, db: Session = Depends(get_db)):
+def get_progress(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Full progress report — raw metrics + AI insights."""
-    profile = _get_profile_or_404(user_id, db)
+    profile = _get_profile_or_404(user_id, db, current_user)
 
     strength = get_strength_progression(user_id, db)
     volume = get_volume_trends(user_id, db)
@@ -59,21 +63,21 @@ def get_progress(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{user_id}/strength")
-def get_strength(user_id: int, db: Session = Depends(get_db)):
+def get_strength(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Per-lift progression chart data with trend detection."""
-    _get_profile_or_404(user_id, db)
+    _get_profile_or_404(user_id, db, current_user)
     return get_strength_progression(user_id, db)
 
 
 @router.get("/{user_id}/volume")
-def get_volume(user_id: int, db: Session = Depends(get_db)):
+def get_volume(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Weekly volume trends per muscle group."""
-    _get_profile_or_404(user_id, db)
+    _get_profile_or_404(user_id, db, current_user)
     return get_volume_trends(user_id, db)
 
 
 @router.get("/{user_id}/consistency")
-def get_consistency_report(user_id: int, db: Session = Depends(get_db)):
+def get_consistency_report(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     """Training frequency, gap periods, muscle frequency, and score trend."""
-    _get_profile_or_404(user_id, db)
+    _get_profile_or_404(user_id, db, current_user)
     return get_consistency(user_id, db)

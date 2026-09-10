@@ -48,6 +48,7 @@ export default function LoginPage() {
         password: form.password
       });
       localStorage.setItem("userId", res.data.id);
+      localStorage.setItem("token", res.data.access_token);
       // Check if profile exists — if not, send to onboarding
       try {
         await getProfile(res.data.id);

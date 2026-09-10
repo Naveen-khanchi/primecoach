@@ -61,6 +61,7 @@ export default function SignUpPage() {
         password: form.password
       });
       localStorage.setItem("userId", res.data.id);
+      localStorage.setItem("token", res.data.access_token);
       router.push("/onboarding");
     } catch(err){
       if (axios.isAxiosError(err) && err.response?.data?.detail) {

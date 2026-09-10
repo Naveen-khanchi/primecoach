@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 /**
  * Guards client-side pages that require a logged-in user.
- * Redirects to /login if no userId is found in localStorage.
+ * Redirects to /login if no userId or token is found in localStorage.
  *
  * Returns `userId: null` while the check is in flight — callers should
  * treat that as "not ready to render yet", not "logged out".
@@ -16,7 +16,8 @@ export function useRequireAuth() {
 
   useEffect(() => {
     const stored = Number(localStorage.getItem("userId"));
-    if (!stored) {
+    const token = localStorage.getItem("token");
+    if (!stored || !token) {
       router.replace("/login");
       return;
     }
